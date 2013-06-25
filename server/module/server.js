@@ -1,4 +1,5 @@
-exports.localDatabase = '/data';
+exports.executions = '/pals/executions';
+exports.localDatabase = '/pals/data';
 var http = require('http');
 var https = require('https');
 var fs = require('fs');
@@ -37,7 +38,7 @@ exports.copyFileToLocal = function(file,callback) {
         res.on('end', function(){
             fs.writeFile(exports.localDatabase+'/'+file.key, data, 'binary', function(err){
                 if (err) throw err
-                console.log('File saved: ' + file.key);
+                //console.log('File saved: ' + file.key);
                 if( callback ) callback(file);
             })
         });
@@ -52,4 +53,16 @@ exports.localFilenames = function(message) {
         }
     }
     return message;
-}
+};
+
+exports.createDir = function(message) {
+	var dirName = exports.executions + '/' + message._id;
+	var exists = fs.existsSync(dirName);
+	if( !fs.existsSync(dirName) ) fs.mkdirSync(dirName);
+	message.dir = dirName;
+	return message;
+};
+
+exports.prepareScript = function(message) {
+	
+};

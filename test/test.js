@@ -39,4 +39,11 @@ describe('server', function(){
         	}
         })
     });
+    describe('#createDir()', function(){
+        it('should create working directory', function(){
+        	var result = server.createDir(message);
+        	assert.equal(fs.existsSync(result.dir),true);
+        	fs.rmdir(result.dir);
+        })
+    });
 })
