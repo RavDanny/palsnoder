@@ -46,4 +46,11 @@ describe('server', function(){
         	fs.rmdir(result.dir);
         })
     });
+    describe('#prepareScript()', function(){
+        it('should create the r script', function(){
+        	var result = server.createDir(message);
+        	result = server.prepareScript(result);
+        	fs.rmdir(result.dir);
+        })
+    });
 })

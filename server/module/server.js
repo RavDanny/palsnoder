@@ -64,5 +64,11 @@ exports.createDir = function(message) {
 };
 
 exports.prepareScript = function(message) {
-	
+	var scriptFilename = message.dir + '/script.r';
+	var stream = fs.createWriteStream(scriptFilename);
+	stream.once('open', function(fd) {
+	  stream.write('print ( "Hello, world!", quote = FALSE )\n');
+	  stream.end();
+	});
+	return message;
 };
