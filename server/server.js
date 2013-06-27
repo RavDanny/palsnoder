@@ -19,5 +19,12 @@ connection.on('ready', function () {
 });
 
 function handleMessage(message) {
-	server.copyFilesToLocal(message);
+	message = server.copyFilesToLocal(message);
+	message = server.localFilenames(message);
+	message = server.createDir(message);
+	server.prepareScript(message, function(preparedScript){
+		server.writeInput(preparedScript,function(wroteInput){
+			
+		});
+	});
 }

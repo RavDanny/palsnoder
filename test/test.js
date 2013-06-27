@@ -47,10 +47,23 @@ describe('server', function(){
         })
     });
     describe('#prepareScript()', function(){
-        it('should create the r script', function(){
+        it('should create the r script', function(done){
         	var result = server.createDir(message);
-        	result = server.prepareScript(result);
-        	fs.rmdir(result.dir);
+        	result = server.prepareScript(result,function(preparedScript){
+            	fs.unlinkSync(preparedScript.scriptFilename);
+            	fs.rmdirSync(preparedScript.dir);
+            	done();
+        	});
+        })
+    });
+    describe('#writeInput()', function(){
+        it('should create the input json', function(done){
+        	var result = server.createDir(message);
+        	result = server.writeInput(result,function(result){
+        		fs.unlinkSync(result.inputFilename);
+            	fs.rmdirSync(result.dir);
+            	done();
+        	});
         })
     });
 })

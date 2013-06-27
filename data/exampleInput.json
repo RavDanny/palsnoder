@@ -33,11 +33,11 @@
        },
        {   
            "type" : "Script",
-           "url" : "https://s3-ap-southeast-2.amazonaws.com/pals-test/7WvTivgRT3GgnePfZequ_example.txt",  
-           "filename" : "example.txt",
+           "url" : "https://s3-ap-southeast-2.amazonaws.com/pals-test/exampleScript.r",  
+           "filename" : "exampleScript.r",
            "mimetype" : "text/plain",   
            "size" : 8942,  
-           "key" : "7WvTivgRT3GgnePfZequ_example.txt",    
+           "key" : "script.r",    
            "isWriteable" : true,   
            "created" : 13029298292
        }

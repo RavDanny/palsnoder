@@ -63,12 +63,45 @@ exports.createDir = function(message) {
 	return message;
 };
 
-exports.prepareScript = function(message) {
-	var scriptFilename = message.dir + '/script.r';
-	var stream = fs.createWriteStream(scriptFilename);
-	stream.once('open', function(fd) {
-	  stream.write('print ( "Hello, world!", quote = FALSE )\n');
-	  stream.end();
-	});
-	return message;
+exports.prepareScript = function(message,callback) {
+	var scriptFilename = message.dir + '/rRunner.r';
+	var experimentScript = '';
+	for( var i =0; i < message.files.length; ++i ) {
+	    var file = message.files[i];
+	    if( file.type == 'Script' ) {
+	    	experimentScript = file.filename;
+	    }
+	}
+	if( experimentScript.length <= 0 ) throw 'No script input found';
+	var inputString = '';
+	inputString += 'library("RJSONIO")\n';
+    inputString += 'inputFile <- "input.json"\n';
+    inputString += 'input <- fromJSON(paste(readLines(inputFile), collapse=""))\n';
+    inputString += 'source("'+experimentScript+'")\n';
+    inputString += 'output <- toJSON(output)\n';
+    inputString += 'fileConn<-file("'+message.dir+'/output.json")\n';
+    inputString += 'writeLines(output, fileConn)\n';
+    inputString += 'close(fileConn)\n';
+    
+    fs.writeFile(scriptFilename, inputString, function (err) {
+    	if (err) throw err
+    	message.scriptFilename = scriptFilename;
+  	    callback(message);
+    });
 };
+
+exports.writeInput = function(message,callback) {
+	var inputFilename = message.dir + '/input.json';
+	console.log(inputFilename);
+	var stream = fs.createWriteStream(inputFilename);
+	stream.once('open', function(fd) {
+        stream.write(JSON.stringify(message)+'\n')
+		stream.end();
+    	message.inputFilename = inputFilename;
+    	callback(message);
+	});
+}
+
+exports.executeScript = function(message,callback) {
+	var scriptFilename = message.scriptFilename;
+}
