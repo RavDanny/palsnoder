@@ -2,7 +2,7 @@ var amqp = require('amqp');
 
 var exchangeName = 'pals';
 var routingKey = 'pals.input';
-var exampleInput = '../data/exampleInput.json';
+var exampleInput = '../data/exampleInputOneFile.json';
 
 var fs = require('fs');
 

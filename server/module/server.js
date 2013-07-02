@@ -127,6 +127,7 @@ exports.executeScript = function(message,callback) {
 	exec('R --no-save < '+scriptFilename,function(err,stdout,stderr){
 		if( err ) callback(err);
 		else {
+			console.log(stdout);
 			message.outputFilename = message.dir + '/' + 'output.json';
 			callback(null,message);
 		}

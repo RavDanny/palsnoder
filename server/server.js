@@ -15,7 +15,7 @@ connection.on('ready', function () {
        console.log('Queue ' + q.name + ' is open');  
 	   q.bind(exchangeName,incomingRoutingKey);
        q.subscribe(function (message) {
-           handleMessage(message);
+    	   handleMessage(message);
        });
    });
 });
@@ -40,10 +40,10 @@ function handleMessage(message) {
             	    server.readOutput(executedScript,function(err,outputRead,output){
             	    	console.log('Read output file');
             	    	fs.unlinkSync(outputRead.outputFilename);
-                 	    fs.rmdirSync(outputRead.dir);
                  	    console.log('Deleted output file and removed working directory');
                  	    server.moveFilesToS3(output,function(err,movedToS3){
                  	    	console.log('Moved files to S3');
+                 	    	fs.rmdirSync(outputRead.dir);
                  	    	sendMessage(movedToS3);
                  	    });
             	    });
