@@ -8,5 +8,4 @@ Dependencies
 * R
 * RabbitMQ
 * R packages (RJSONIO,..)
-* node.js packages (amqp,async,mocha)
-* AWS command line tools for s3
+* node.js packages (amqp,async,mocha,aws-sdk,node-uuid)

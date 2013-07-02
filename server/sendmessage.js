@@ -16,5 +16,6 @@ var connection = amqp.createConnection({url: "amqp://guest:guest@localhost:5672"
 connection.on('ready', function () {
 	connection.exchange(exchangeName,{}, function (exchange) {
 		exchange.publish(routingKey, message);
+		process.exit(code=0);
     });
 });

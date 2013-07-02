@@ -1,10 +1,16 @@
 exports.executions = '/pals/executions';
 exports.localDatabase = '/pals/data';
+exports.bucket = 'pals-test';
+exports.baseUrl = 'https://s3-ap-southeast-2.amazonaws.com/'+exports.bucket;
+
 var http = require('http');
 var https = require('https');
 var fs = require('fs');
 var url = require('url');
 var async = require('async');
+var AWS = require('aws-sdk');
+AWS.config.loadFromPath(__dirname + '/config.json');
+var uuid = require('node-uuid');
 
 exports.copyFilesToLocal = function(message,callback) {
 	var asyncFunctions = new Array();
@@ -138,20 +144,50 @@ exports.readOutput = function(message,callback) {
 	});
 }
 
-exports.copyFileToS3 = function(file,callback) {
-	if( file.error ) callback(null,file);
-	callback(null,file);
+exports.moveFileToS3 = function(file,callback) {
+	if( file.error ) {
+		callback(null,file);
+		return;
+	}
+	
+	fs.readFile(file.filename, function (err,data) {
+	    if (err) callback(err);
+	    else {
+	    	
+	    	var s3 = new AWS.S3();
+	    	
+	    	file.key = uuid.v4();
+	    	file.url = exports.baseUrl + '/' + file.key;
+	    	
+	    	s3.putObject({
+	    		ACL : "public-read",
+	    		Bucket : exports.bucket,
+	    		ContentType : file.mimetype,
+	    		Key : file.key,
+	    		Body : data
+	    	},function(err,data){
+	    		if( err ) callback(err,file);
+	    		else {
+	    			fs.unlinkSync(file.filename);
+	    		    callback(null,file);
+	    		}
+	    	});
+	    }
+	});
 };
 
-exports.copyFilesToS3 = function(output,callback) {
+exports.moveFilesToS3 = function(output,callback) {
 	
-	if( output.error ) callback(null,file);
+	if( output.error ) {
+		callback(output.error);
+		return;
+	}
 	
 	var asyncFunctions = new Array();
 	
 	function makeCallbackFunction(file) {
 		return function(callback) {
-			exports.copyFileToS3(file,callback);
+			exports.moveFileToS3(file,callback);
 		}
 	}
 	
@@ -167,3 +203,13 @@ exports.copyFilesToS3 = function(output,callback) {
         }
     );
 };
+
+exports.deleteFile = function(file,callback) {
+	var s3 = new AWS.S3();
+	s3.deleteObject({
+		Bucket : exports.bucket,
+		Key : file.key
+	},function(err,data){
+		callback(err,file);
+	})
+}
