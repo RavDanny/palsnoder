@@ -9,7 +9,6 @@ var testUpload = '../data/testUpload.png';
 
 var assert = require("assert")
 describe('server', function(){
-	/*
     describe('#copyFilesToLocal()', function(){
         it('should copy files', function(done){
         	this.timeout(100000);
@@ -118,22 +117,37 @@ describe('server', function(){
         	});
         })
     });
-    */
-    describe('#copyFilesToS3()', function(){
+    describe('#moveFilesToS3()', function(){
         it('should copy files to S3', function(done){
-        	var output = {
-        	    _id : message._id,
-        	    files : [
-                    {
-                        "type" : "NEEAverageWindow", 
-                        "filename" : testUpload,
-                        "mimetype" : "image/png"     
-                    }
-        	    ]
-        	}
-        	server.copyFilesToS3(output,function(err,output){
-        		done();
+        	this.timeout(100000);
+        	
+        	// first we make a copy of the test file because it is deleted at the end
+        	var tempFile = 'temp.png';
+        	fs.readFile(testUpload, function (err,data) {
+        		fs.writeFile(tempFile, data, function (err) {
+    	        	if (err) throw err
+    	        	var output = {
+	            	    _id : message._id,
+	            	    files : [
+	                        {
+	                            "type" : "NEEAverageWindow", 
+	                            "filename" : tempFile,
+	                            "mimetype" : "image/png"     
+	                        }
+	            	    ]
+	            	}
+	            	server.moveFilesToS3(output,function(err,output){
+	            		var file = output.files[0];
+	            		assert(file.url,'No url returned');
+	            		assert(file.key,'No key returned');
+	            		assert(!fs.exists(file.filename));
+	            		assert.equal(file.url,server.baseUrl+'/'+file.key);
+	            		server.deleteFile(file,function(err,data){
+	            			done();
+	            		});
+	            	});
+    	        });
         	});
-        })
+        });
     });
 })
