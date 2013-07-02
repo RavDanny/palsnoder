@@ -19,12 +19,22 @@ connection.on('ready', function () {
 });
 
 function handleMessage(message) {
-	message = server.copyFilesToLocal(message);
-	message = server.localFilenames(message);
-	message = server.createDir(message);
-	server.prepareScript(message, function(preparedScript){
-		server.writeInput(preparedScript,function(wroteInput){
-			
-		});
+	server.copyFilesToLocal(message,function(err,message){
+		result = server.localFilenames(message);
+    	result = server.createDir(result);
+    	server.writeInput(result,function(inputWritten){
+    		server.prepareScript(inputWritten,function(preparedScript){
+    			server.executeScript(preparedScript,function(err,executedScript){
+            	    fs.unlinkSync(executedScript.scriptFilename);
+            	    fs.unlinkSync(executedScript.inputFilename);
+            	    assert.equal(fs.existsSync(executedScript.outputFilename),true);
+            	    server.readOutput(executedScript,function(err,outputRead,output){
+            	    	fs.unlinkSync(outputRead.outputFilename);
+                 	    fs.rmdirSync(outputRead.dir);
+                 	    done();
+            	    });
+    			});
+        	});
+    	});
 	});
 }
