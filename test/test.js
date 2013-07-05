@@ -6,8 +6,12 @@ require.extensions['.json'] = function (module, filename) {
 var exampleInput = '../data/exampleInput.json';
 var message = JSON.parse(require(exampleInput));
 var testUpload = '../data/testUpload.png';
+var exampleUrl = "https://s3-ap-southeast-2.amazonaws.com/pals-test/7WvTivgRT3GgnePfZequ_example.txt";
+var exampleKey = "7WvTivgRT3GgnePfZequ_example.txt";
 
-var assert = require("assert")
+var domain = require('domain');
+var assert = require("assert");
+
 describe('server', function(){
     describe('#copyFilesToLocal()', function(){
         it('should copy files', function(done){
@@ -27,11 +31,11 @@ describe('server', function(){
         	this.timeout(100000);
         	var file = {
         	           type : "ModelOutput",
-        	           url : "https://s3-ap-southeast-2.amazonaws.com/pals-test/7WvTivgRT3GgnePfZequ_example.txt",  
+        	           url : exampleUrl,  
         	           filename : "example.txt",
         	           mimetype : "text/plain",   
         	           size : 8942,  
-        	           key : "7WvTivgRT3GgnePfZequ_example.txt",    
+        	           key : exampleKey,    
         	           isWriteable : true,   
         	           created : 13029298292
         	       };
@@ -148,6 +152,37 @@ describe('server', function(){
 	            	});
     	        });
         	});
+        });
+    });
+	describe('#removeFiles()', function(){
+      it('should remove directory', function(){
+    	  var testDir = 'testDir';
+    	  fs.mkdirSync(testDir);
+    	  var testFile = testDir + '/testFile';
+    	  fs.writeFileSync(testFile,'This is the contents');
+    	  var message = {dir:testDir};
+    	  server.removeDirectory(message);
+    	  assert(!fs.existsSync(testDir));
+    	  assert(!fs.existsSync(testFile));
+      });
+    });
+	describe('#dodgy script', function(){
+        it('should produce an error gracefully', function(done){
+        	this.timeout(100000);
+        	var dodgy = {_id:'1234',files:[{   
+                "type" : "Script",
+                "url" : exampleUrl,  
+                "filename" : "example.txt",
+                "mimetype" : "text/plain",   
+                "size" : 8942,  
+                "key" : exampleKey,    
+                "isWriteable" : true,   
+                "created" : 13029298292
+            }]};
+        	server.handleMessage(dodgy,function(output){
+        		console.log(JSON.stringify(output));
+        		done();
+        	})
         });
     });
 })

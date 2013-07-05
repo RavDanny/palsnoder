@@ -8,4 +8,4 @@ Dependencies
 * R
 * RabbitMQ
 * R packages (RJSONIO,..)
-* node.js packages (amqp,async,mocha,aws-sdk,node-uuid)
+* node.js packages (amqp,async,mocha,aws-sdk,node-uuid,underscore)

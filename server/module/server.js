@@ -11,8 +11,14 @@ var async = require('async');
 var AWS = require('aws-sdk');
 AWS.config.loadFromPath(__dirname + '/config.json');
 var uuid = require('node-uuid');
+var domain = require('domain');
 
 exports.copyFilesToLocal = function(message,callback) {
+	
+	if( !message.files || message.files.length <= 0 ) {
+		throw new Error('No input files provided');
+	}
+	
 	var asyncFunctions = new Array();
 	
 	function makeCallbackFunction(file) {
@@ -91,7 +97,7 @@ exports.prepareScript = function(message,callback) {
 	    	experimentScript = file.filename;
 	    }
 	}
-	if( experimentScript.length <= 0 ) throw 'No script input found';
+	if( experimentScript.length <= 0 ) throw new Error('Please upload an experiment script to run');
 	var inputString = '';
 	inputString += 'library("RJSONIO")\n';
     inputString += 'inputFile <- "input.json"\n';
@@ -125,9 +131,9 @@ exports.executeScript = function(message,callback) {
 	var exec=require('child_process').exec;
 	process.chdir(message.dir);
 	exec('R --no-save < '+scriptFilename,function(err,stdout,stderr){
-		if( err ) callback(err);
+		if( err ) callback(err,message);
 		else {
-			console.log(stdout);
+			//console.log(stdout);
 			message.outputFilename = message.dir + '/' + 'output.json';
 			callback(null,message);
 		}
@@ -213,4 +219,61 @@ exports.deleteFile = function(file,callback) {
 	},function(err,data){
 		callback(err,file);
 	})
+}
+
+exports.handleMessage = function(message,sendMessage) {
+	
+	var d = domain.create();
+	d.on('error', function(err) {
+		console.log(err.message);
+		exports.removeDirectory(message);
+		message.error = err.message;
+		sendMessage(message);
+	});
+	
+	d.run(function(){
+		console.log('processing message: ' + message._id);
+		exports.copyFilesToLocal(message,function(err,message){
+			console.log('Copied files to local filesystem');
+			result = exports.localFilenames(message);
+			console.log('Added local filenames');
+	    	result = exports.createDir(result);
+	    	console.log('Created working directory');
+	    	exports.writeInput(result,function(inputWritten){
+	    		console.log('Wrote input file');
+	    		exports.prepareScript(inputWritten,function(preparedScript){
+	    			console.log('Prepared script');
+	    			exports.executeScript(preparedScript,function(err,executedScript){
+	    				console.log('Executed script');
+	            	    fs.unlinkSync(executedScript.scriptFilename);
+	            	    fs.unlinkSync(executedScript.inputFilename);
+	            	    console.log('Deleted script and input file');
+	            	    exports.readOutput(executedScript,function(err,outputRead,output){
+	            	    	console.log('Read output file');
+	            	    	fs.unlinkSync(outputRead.outputFilename);
+	                 	    console.log('Deleted output file and removed working directory');
+	                 	    exports.moveFilesToS3(output,function(err,movedToS3){
+	                 	    	console.log('Moved files to S3');
+	                 	    	fs.rmdirSync(outputRead.dir);
+	                 	    	sendMessage(movedToS3);
+	                 	    });
+	            	    });
+	    			});
+	        	});
+	    	});
+		});
+	});
+}
+
+exports.removeDirectory = function(message) {
+	if( message.dir && fs.existsSync(message.dir) ) {
+		var contents = fs.readdirSync(message.dir);
+		if( contents && contents.length > 0 ) {
+			for( var i=0; i < contents.length; ++i ) {
+				var file = contents[i];
+				if( fs.existsSync) fs.unlinkSync(message.dir+'/'+file);
+			}
+		}
+		fs.rmdirSync(message.dir);
+	}
 }

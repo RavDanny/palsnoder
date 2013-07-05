@@ -11,7 +11,7 @@ require.extensions['.json'] = function (module, filename) {
 };
 var message = JSON.parse(require(exampleInput));
 
-var connection = amqp.createConnection({url: "amqp://guest:guest@localhost:5672"});
+var connection = amqp.createConnection({url: "amqp://guest:guest@localhost:5672"},{reconnect:false});
 
 connection.on('ready', function () {
 	connection.exchange(exchangeName,{}, function (exchange) {
