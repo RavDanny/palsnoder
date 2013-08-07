@@ -30,7 +30,6 @@ function sendMessage(output) {
 		console.log('connection ready');
 		outgoingConnection.exchange(exchangeName,{}, function (exchange) {
 			console.log('exchange ready');
-output.error = 'This was an error';
 			exchange.publish(outgoingRoutingKey, output);
 			console.log('Sent output message');
 	    });
