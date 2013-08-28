@@ -131,7 +131,10 @@ exports.executeScript = function(message,callback) {
 	var exec=require('child_process').exec;
 	process.chdir(message.dir);
 	exec('R --no-save < '+scriptFilename,function(err,stdout,stderr){
-		if( err ) callback(err,message);
+                console.log('exec finished');
+		if( err ) {
+                    callback(err,message);
+                }
 		else {
 			//console.log(stdout);
 			message.outputFilename = message.dir + '/' + 'output.json';
@@ -141,6 +144,8 @@ exports.executeScript = function(message,callback) {
 }
 
 exports.readOutput = function(message,callback) {
+        console.log('Reading output file');
+        console.log('Path: ' + message.outputFilename);
 	fs.readFile(message.outputFilename, 'utf8', function (err,data) {
 	    if (err) callback(err);
 	    else {
@@ -248,6 +253,10 @@ exports.handleMessage = function(message,sendMessage) {
 	            	    fs.unlinkSync(executedScript.scriptFilename);
 	            	    fs.unlinkSync(executedScript.inputFilename);
 	            	    console.log('Deleted script and input file');
+                            if( err ) {
+                                 throw new Error(err);
+                            }
+                            else {
 	            	    exports.readOutput(executedScript,function(err,outputRead,output){
 	            	    	console.log('Read output file');
 	            	    	fs.unlinkSync(outputRead.outputFilename);
@@ -258,6 +267,7 @@ exports.handleMessage = function(message,sendMessage) {
 	                 	    	sendMessage(movedToS3);
 	                 	    });
 	            	    });
+                             }
 	    			});
 	        	});
 	    	});
