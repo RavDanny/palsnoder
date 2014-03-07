@@ -3,7 +3,7 @@
    "files" : [
        {
            "type" : "ModelOutput",
-           "url" : "https://s3-ap-southeast-2.amazonaws.com/pals-test/7WvTivgRT3GgnePfZequ_example.txt",  
+           "path" : "example.txt", 
            "filename" : "example.txt",
            "mimetype" : "text/plain",   
            "size" : 8942,  
@@ -12,18 +12,8 @@
            "created" : 13029298292
        },
        {   
-           "type" : "DrivingDataSet",
-           "url" : "https://s3-ap-southeast-2.amazonaws.com/pals-test/7WvTivgRT3GgnePfZequ_example.txt",  
-           "filename" : "example.txt",
-           "mimetype" : "text/plain",   
-           "size" : 8942,  
-           "key" : "7WvTivgRT3GgnePfZequ_example.txt",    
-           "isWriteable" : true,   
-           "created" : 13029298292
-       },
-       {   
-           "type" : "InputDataSet",
-           "url" : "https://s3-ap-southeast-2.amazonaws.com/pals-test/7WvTivgRT3GgnePfZequ_example.txt",  
+           "type" : "DataSet",
+           "path" : "example.txt",  
            "filename" : "example.txt",
            "mimetype" : "text/plain",   
            "size" : 8942,  
@@ -33,7 +23,7 @@
        },
        {   
            "type" : "Script",
-           "url" : "https://s3-ap-southeast-2.amazonaws.com/pals-test/exampleScript.r",  
+           "path" : "/vagrant/palsnoder/data/exampleScript.r", 
            "filename" : "exampleScript.r",
            "mimetype" : "text/plain",   
            "size" : 8942,  

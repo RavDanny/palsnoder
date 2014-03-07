@@ -6,54 +6,11 @@ require.extensions['.json'] = function (module, filename) {
 var exampleInput = '../data/exampleInput.json';
 var message = JSON.parse(require(exampleInput));
 var testUpload = '../data/testUpload.png';
-var exampleUrl = "https://s3-ap-southeast-2.amazonaws.com/pals-test/7WvTivgRT3GgnePfZequ_example.txt";
-var exampleKey = "7WvTivgRT3GgnePfZequ_example.txt";
 
 var domain = require('domain');
 var assert = require("assert");
 
 describe('server', function(){
-    describe('#copyFilesToLocal()', function(){
-        it('should copy files', function(done){
-        	this.timeout(100000);
-            var result = server.copyFilesToLocal(message,function(err,message){
-            	for( var i=0; i < message.files.length; ++i ) {
-            		var file = message.files[i];
-            		var path = server.localDatabase+'/'+file.key;
-            		if( fs.existsSync(path) ) fs.unlinkSync(path);
-            	}
-            	done();
-            });
-        })
-    });
-    describe('#copyFileToLocal()', function(){
-        it('should copy file', function(done){
-        	this.timeout(100000);
-        	var file = {
-        	           type : "ModelOutput",
-        	           url : exampleUrl,  
-        	           filename : "example.txt",
-        	           mimetype : "text/plain",   
-        	           size : 8942,  
-        	           key : exampleKey,    
-        	           isWriteable : true,   
-        	           created : 13029298292
-        	       };
-            server.copyFileToLocal(file,function(err,file){
-            	var path = server.localDatabase+'/'+file.key;
-            	fs.unlinkSync(path);
-            	done();
-            });
-        })
-    });
-    describe('#localFilenames()', function(){
-        it('should replace filenames', function(){
-        	var result = server.localFilenames(message);
-        	for( var i=0; i < result.files.length; ++i ) {
-        		assert.equal(result.files[i].filename,server.localDatabase+'/'+result.files[i].key);
-        	}
-        })
-    });
     describe('#createDir()', function(){
         it('should create working directory', function(){
         	var result = server.createDir(message);
@@ -84,20 +41,20 @@ describe('server', function(){
     describe('#executeScript()', function(){
         it('should execute the script', function(done){
         	this.timeout(100000);
-        	server.copyFilesToLocal(message,function(err,message){
-        		result = server.localFilenames(message);
-            	result = server.createDir(result);
-            	server.writeInput(result,function(inputWritten){
-            		server.prepareScript(inputWritten,function(preparedScript){
-            			server.executeScript(preparedScript,function(err,executedScript){
-                    	    fs.unlinkSync(executedScript.scriptFilename);
-                    	    fs.unlinkSync(executedScript.inputFilename);
-                    	    assert.equal(fs.existsSync(executedScript.outputFilename),true);
-                    	    fs.unlinkSync(executedScript.outputFilename);
-                    	    fs.rmdirSync(executedScript.dir);
+        	result = server.createDir(message);
+        	server.writeInput(result,function(inputWritten){
+        		server.prepareScript(inputWritten,function(preparedScript){
+        			server.executeScript(preparedScript,function(err,executedScript){
+                        server.readOutput(executedScript,function(err,readOutput,output){
+                    	    fs.unlinkSync(readOutput.scriptFilename);
+                    	    fs.unlinkSync(readOutput.inputFilename);
+                    	    assert.equal(fs.existsSync(readOutput.outputFilename),true);
+                    	    fs.unlinkSync(readOutput.outputFilename);
+                            fs.unlinkSync(readOutput.dir + '/' + output.files[0].filename);
+                    	    fs.rmdirSync(readOutput.dir);
                     	    done();
-            			});
-                	});
+                        });
+        			});
             	});
         	});
         })
@@ -115,14 +72,15 @@ describe('server', function(){
             		assert.equal(output.files.length, message.files.length);
             		assert.equal(output._id, message._id);
             		fs.unlinkSync(outputFilename);
+                    fs.unlinkSync(message.dir + '/' + output.files[0].filename);
             	    fs.rmdirSync(result.dir);
             	    done();
             	});
         	});
         })
     });
-    describe('#moveFilesToS3()', function(){
-        it('should copy files to S3', function(done){
+    describe('#copyFilesToDataDir()', function(){
+        it('should copy files to data dir', function(done){
         	this.timeout(100000);
         	
         	// first we make a copy of the test file because it is deleted at the end
@@ -138,14 +96,15 @@ describe('server', function(){
 	                            "filename" : tempFile,
 	                            "mimetype" : "image/png"     
 	                        }
-	            	    ]
+	            	    ],
+                        dir : process.cwd()
 	            	}
-	            	server.moveFilesToS3(output,function(err,output){
+	            	server.copyFilesToDataDir(output,function(err,output){
 	            		var file = output.files[0];
-	            		assert(file.url,'No url returned');
+	            		assert(file.path,'No url returned');
 	            		assert(file.key,'No key returned');
 	            		assert(!fs.exists(file.filename));
-	            		assert.equal(file.url,server.baseUrl+'/'+file.key);
+	            		assert.equal(file.path,server.localDatabase+'/'+file.key);
 	            		server.deleteFile(file,function(err,data){
 	            			done();
 	            		});
@@ -171,11 +130,11 @@ describe('server', function(){
         	this.timeout(100000);
         	var dodgy = {_id:'1234',files:[{   
                 "type" : "Script",
-                "url" : exampleUrl,  
+                "path" : "/vagrant/palsnoder/test/example.txt",  
                 "filename" : "example.txt",
                 "mimetype" : "text/plain",   
                 "size" : 8942,  
-                "key" : exampleKey,    
+                "key" : "WEKJFEWF89787987FEWEF",    
                 "isWriteable" : true,   
                 "created" : 13029298292
             }]};
