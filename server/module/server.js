@@ -1,5 +1,5 @@
-exports.executions = '/pals/executions';
-exports.localDatabase = '/pals/data';
+var executions = '/pals/executions';
+var localDatabase = '/pals/data';
 
 var http = require('http');
 var https = require('https');
@@ -9,8 +9,12 @@ var async = require('async');
 var uuid = require('node-uuid');
 var domain = require('domain');
 
+exports.getLocalDatabase = function() {
+    return localDatabase;
+}
+
 exports.createDir = function(message) {
-    var dirName = exports.executions + '/' + message._id;
+    var dirName = executions + '/' + message._id;
     if (!fs.existsSync(dirName)) fs.mkdirSync(dirName);
     message.dir = dirName;
     return message;
@@ -57,14 +61,17 @@ exports.writeInput = function(message, callback) {
 exports.executeScript = function(message, callback) {
     var scriptFilename = message.scriptFilename;
     var exec = require('child_process').exec;
+    var originalDir = process.cwd();
     process.chdir(message.dir);
     exec('R --no-save < ' + scriptFilename, function(err, stdout, stderr) {
         console.log('exec finished');
         if (err) {
             callback(err, message);
+            process.chdir(originalDir);
         } else {
             //console.log(stdout);
             message.outputFilename = message.dir + '/' + 'output.json';
+            process.chdir(originalDir);
             callback(null, message);
         }
     });
@@ -94,7 +101,7 @@ exports.copyFileToDataDir = function(file, callback) {
         callback(err, file);
     });
     file.key = uuid.v4();
-    file.path = exports.localDatabase + '/' + file.key;
+    file.path = localDatabase + '/' + file.key;
     var write = fs.createWriteStream(file.path);
     write.on('error', function(err) {
         callback(err, file);

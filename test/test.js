@@ -37,7 +37,7 @@ describe('server', function(){
             	done();
         	});
         })
-    });
+    })
     describe('#executeScript()', function(){
         it('should execute the script', function(done){
         	this.timeout(100000);
@@ -72,7 +72,6 @@ describe('server', function(){
             		assert.equal(output.files.length, message.files.length);
             		assert.equal(output._id, message._id);
             		fs.unlinkSync(outputFilename);
-                    fs.unlinkSync(message.dir + '/' + output.files[0].filename);
             	    fs.rmdirSync(result.dir);
             	    done();
             	});
@@ -86,8 +85,15 @@ describe('server', function(){
         	// first we make a copy of the test file because it is deleted at the end
         	var tempFile = 'temp.png';
         	fs.readFile(testUpload, function (err,data) {
+                if (err) {
+                    console.log('Failed to read test file ' + testUpload);
+                    throw err;
+                }
         		fs.writeFile(tempFile, data, function (err) {
-    	        	if (err) throw err
+    	        	if (err) {
+                        console.log('Error writing file to data dir');
+                        throw err
+                    }
     	        	var output = {
 	            	    _id : message._id,
 	            	    files : [
@@ -104,7 +110,7 @@ describe('server', function(){
 	            		assert(file.path,'No url returned');
 	            		assert(file.key,'No key returned');
 	            		assert(!fs.exists(file.filename));
-	            		assert.equal(file.path,server.localDatabase+'/'+file.key);
+	            		assert.equal(file.path,server.getLocalDatabase()+'/'+file.key);
 	            		server.deleteFile(file,function(err,data){
 	            			done();
 	            		});
