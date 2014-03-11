@@ -99,8 +99,7 @@ exports.copyFileToDataDir = function(file, callback) {
         callback(null, file);
         return;
     }
-    var path = file.dir + '/' + file.filename;
-    var read = fs.createReadStream(path);
+    var read = fs.createReadStream(file.filename);
     read.on('error', function(err) {
         callback(err, file);
     });
@@ -177,10 +176,10 @@ exports.handleMessage = function(message, sendMessage) {
                         exports.readOutput(executedScript, function(err, outputRead, output) {
                             console.log('Read output file');
                             fs.unlinkSync(outputRead.outputFilename);
-                            console.log('Deleted output file and removed working directory');
+                            console.log('Deleted output file');
                             exports.copyFilesToDataDir(output, function(err, copiedToDataDir) {
                                 console.log('Moved files to data dir');
-                                fs.rmdirSync(outputRead.dir);
+                                exports.removeDirectory(message);
                                 sendMessage(movedToS3);
                             });
                         });
