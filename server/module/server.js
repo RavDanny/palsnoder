@@ -59,10 +59,14 @@ exports.writeInput = function(message, callback) {
 }
 
 exports.executeScript = function(message, callback) {
+    console.log('about to execute script');
     var scriptFilename = message.scriptFilename;
+    console.log('script filename: ' + scriptFilename);
     var exec = require('child_process').exec;
     var originalDir = process.cwd();
+    console.log('changing dir: ' + message.dir);
     process.chdir(message.dir);
+    console.log('running script: ' + scriptFilename);
     exec('R --no-save < ' + scriptFilename, function(err, stdout, stderr) {
         console.log('exec finished');
         if (err) {
@@ -118,27 +122,24 @@ exports.copyFilesToDataDir = function(output, callback) {
         callback(output.error);
         return;
     }
-
-    var asyncFunctions = new Array();
-
-    function makeCallbackFunction(file) {
-        return function(callback) {
-            exports.copyFileToDataDir(file, callback);
+    
+    var i = 0;
+    
+    var processFile = function() {
+        if( i >= output.files.length ) {
+            callback(null,output);
+            return;
         }
-    }
-
-    if (output.files) {
-        for (var i = 0; i < output.files.length; ++i) {
-            output.files[i].dir = output.dir;
-            var ff = makeCallbackFunction(output.files[i]);
-            asyncFunctions.push(ff);
-        }
-    }
-    async.parallel(asyncFunctions,
-        function(err, results) {
-            callback(err, output);
-        }
-    );
+        output.files[i].dir = output.dir;
+        exports.copyFileToDataDir(output.files[i],function(err,file){
+            if( err ) {
+                console.log(err);
+            }
+            processFile(++i);
+        })
+    };
+    
+    processFile();
 };
 
 exports.deleteFile = function(file, callback) {
