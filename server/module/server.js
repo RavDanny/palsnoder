@@ -179,8 +179,8 @@ exports.handleMessage = function(message, sendMessage) {
                             console.log('Deleted output file');
                             exports.copyFilesToDataDir(output, function(err, copiedToDataDir) {
                                 console.log('Moved files to data dir');
-                                exports.removeDirectory(message);
-                                sendMessage(movedToS3);
+                                exports.removeDirectory(copiedToDataDir);
+                                sendMessage(copiedToDataDir);
                             });
                         });
                     }
