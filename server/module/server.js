@@ -63,6 +63,7 @@ exports.executeScript = function(message, callback) {
     var scriptFilename = message.scriptFilename;
     console.log('script filename: ' + scriptFilename);
     var exec = require('child_process').exec;
+    console.log('about to get original dir');
     var originalDir = process.cwd();
     console.log('changing dir: ' + message.dir);
     process.chdir(message.dir);
@@ -129,6 +130,10 @@ exports.copyFilesToDataDir = function(output, callback) {
             callback(null,output);
             return;
         }
+        
+        // if error is 'ok' we remove it
+        if( output.files[i].error && output.files[i].error == "ok" ) delete output.files[i].error;
+        
         output.files[i].dir = output.dir;
         exports.copyFileToDataDir(output.files[i],function(err,file){
             if( err ) {
