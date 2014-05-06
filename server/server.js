@@ -2,7 +2,11 @@ var redis = require("redis");
 var server = require('./module/server.js');
 var fs = require('fs');
 
-var client = redis.createClient();
+var REDIS_HOST = process.env.REDIS_HOST;
+if( !REDIS_HOST ) REDIS_HOST = '127.0.0.1';
+var REDIS_PORT = process.env.REDIS_PORT;
+if( !REDIS_PORT ) REDIS_PORT = 6379;
+var client = redis.createClient(REDIS_PORT,REDIS_HOST);
 
 console.log('Listening for messages on queue pals.input');
 
