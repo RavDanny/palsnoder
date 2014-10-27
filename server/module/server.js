@@ -65,6 +65,7 @@ exports.executeScript = function(message, callback) {
     var exec = require('child_process').exec;
     console.log('about to get original dir');
     var originalDir = process.cwd();
+    console.log('here')
     console.log('changing dir: ' + message.dir);
     process.chdir(message.dir);
     console.log('running script: ' + scriptFilename);
